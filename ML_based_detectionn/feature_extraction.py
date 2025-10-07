@@ -1,19 +1,27 @@
 import pefile
 import pandas as pd
 import math
+from typing import List
 
 # Function to calculate entropy of a section
-def calculate_entropy(data):
+def calculate_entropy(data: bytes) -> float:
     if not data:
-        return 0
-    entropy = 0
-    for x in range(256):
-        p_x = float(data.count(bytes([x]))) / len(data)
-        if p_x > 0:
-            entropy += - p_x * math.log(p_x, 2)
+        return 0.0
+    # Use a frequency table to avoid repeated count() calls
+    length = len(data)
+    if length == 0:
+        return 0.0
+    counts: List[int] = [0] * 256
+    for b in data:
+        counts[b] += 1
+    entropy = 0.0
+    for count in counts:
+        if count:
+            p_x = count / length
+            entropy -= p_x * math.log(p_x, 2)
     return entropy
 
-def extract_features(file_path):
+def extract_features(file_path: str) -> pd.DataFrame:
     pe = pefile.PE(file_path)
 
     # Extract the specified 23 features in the given order
@@ -44,11 +52,7 @@ def extract_features(file_path):
     }
 
     # Calculate SectionMinEntropy
-    entropies = []
-    for section in pe.sections:
-        entropy = calculate_entropy(section.get_data())
-        entropies.append(entropy)
-
+    entropies = [calculate_entropy(section.get_data()) for section in pe.sections]
     if entropies:
         features['SectionMinEntropy'] = min(entropies)
 
