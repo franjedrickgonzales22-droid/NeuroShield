@@ -155,7 +155,7 @@ UPLOAD_FOLDER=uploads
 
 **VirusTotal App .env.example:**
 ```env
-VIRUSTOTAL_API_KEY=your-virustotal-api-key-here
+NEUROSHIELD_API_KEY=your-virustotal-api-key-here
 FLASK_SECRET_KEY=your-flask-secret-key-here
 ```
 

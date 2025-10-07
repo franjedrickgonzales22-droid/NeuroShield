@@ -28,9 +28,9 @@ if not app.secret_key:
     app.secret_key = os.urandom(24)
 
 # API configuration
-API_KEY = os.environ.get('VIRUSTOTAL_API_KEY')
+API_KEY = os.environ.get('NEUROSHIELD_API_KEY')
 if not API_KEY:
-    raise ValueError("VIRUSTOTAL_API_KEY environment variable is not set")
+    raise ValueError("NEUROSHIELD_API_KEY environment variable is not set")
 
 # API endpoints
 VIRUSTOTAL_URL_FILE = 'https://www.virustotal.com/vtapi/v2/file/report'

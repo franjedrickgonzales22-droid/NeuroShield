@@ -7,12 +7,12 @@
 
 ## ✅ Completed Tasks
 
-### 1. ✅ VirusTotal API Key Configuration
+### 1. ✅ NeuroShield API Key Configuration
 
 **File:** `Virus_total_based/.env`
 
 ```env
-VIRUSTOTAL_API_KEY=your-api-key-here-replace-this  # ⚠️ Replace with actual key
+NEUROSHIELD_API_KEY=your-api-key-here-replace-this  # ⚠️ Replace with actual key
 FLASK_SECRET_KEY=260d8ca9889e61ea6778ba0717cf152ba7c4b81301c3b3036b4d306dac38c472
 ```
 
@@ -263,7 +263,7 @@ python app.py
 
 ## ⚠️ Important Notes
 
-### VirusTotal API Key
+### NeuroShield API Key
 
 The VirusTotal application requires a valid API key to function:
 
@@ -279,7 +279,7 @@ The VirusTotal application requires a valid API key to function:
    nano Virus_total_based/.env
    
    # Replace placeholder with your key
-   VIRUSTOTAL_API_KEY=<your-actual-api-key-here>
+   NEUROSHIELD_API_KEY=<your-actual-api-key-here>
    ```
 
 3. **Verify:**
@@ -307,7 +307,7 @@ The current model is a **sample/demo model** for testing purposes.
 
 ### Immediate
 
-- [x] Configure VirusTotal API key (user action required)
+- [x] Configure NeuroShield API key (user action required)
 - [x] Test both applications
 - [x] Review logs
 
@@ -366,7 +366,7 @@ The current model is a **sample/demo model** for testing purposes.
 ║                   🎉 CONFIGURATION COMPLETE! 🎉                  ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                  ║
-║  ✅ VirusTotal API Key: Configured (needs user's actual key)    ║
+║  ✅ NeuroShield API Key: Configured (needs user's actual key)    ║
 ║  ✅ ML Model: Trained and loaded (91% accuracy)                 ║
 ║  ✅ Production Server: Gunicorn installed                       ║
 ║  ✅ Rate Limiting: Active and configured                        ║
@@ -386,4 +386,4 @@ The current model is a **sample/demo model** for testing purposes.
 
 **Configuration Completed By:** Automated Setup  
 **Date:** October 7, 2025  
-**Next Action:** Replace VirusTotal API key placeholder with actual key
+**Next Action:** Replace NeuroShield API key placeholder with actual key

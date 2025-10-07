@@ -84,11 +84,11 @@ UPLOAD_FOLDER=uploads
 
 **VirusTotal Application** (`Virus_total_based/.env`):
 ```env
-VIRUSTOTAL_API_KEY=<your-actual-api-key>
+NEUROSHIELD_API_KEY=<your-actual-api-key>
 FLASK_SECRET_KEY=<256-bit-hex-key>
 ```
 
-### 2. Getting a VirusTotal API Key
+### 2. Getting a NeuroShield API Key
 
 1. Visit: https://www.virustotal.com/gui/join-us
 2. Create a free account
@@ -457,7 +457,7 @@ export PATH=$PATH:~/.local/bin
 
 Before deploying to production:
 
-- [ ] VirusTotal API key configured (for VT app)
+- [ ] NeuroShield API key configured (for VT app)
 - [ ] ML model trained with real data (for ML app)
 - [ ] Strong secret keys generated
 - [ ] `.env` files configured

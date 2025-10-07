@@ -4,7 +4,7 @@
 
 - Python 3.8 or higher
 - pip package manager
-- (For VirusTotal app) A VirusTotal API key - Get one free at https://www.virustotal.com/gui/join-us
+- (For VirusTotal app) A NeuroShield API key - Get one free at https://www.virustotal.com/gui/join-us
 
 ## Installation
 
@@ -76,13 +76,13 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Edit the `.env` file and add your VirusTotal API key:
+Edit the `.env` file and add your NeuroShield API key:
 ```env
-VIRUSTOTAL_API_KEY=your-actual-virustotal-api-key-here
+NEUROSHIELD_API_KEY=your-actual-virustotal-api-key-here
 FLASK_SECRET_KEY=your-random-secret-key-here
 ```
 
-**Getting a VirusTotal API Key:**
+**Getting a NeuroShield API Key:**
 1. Visit https://www.virustotal.com/gui/join-us
 2. Create a free account
 3. Navigate to your profile settings
@@ -194,7 +194,7 @@ The application extracts 23 features from PE files:
 2. Save it using `joblib.dump(model, 'malwareclassifier-V2.pkl')`
 3. Place it in `ML_based_detectionn/ML_model/`
 
-### VirusTotal App: "VIRUSTOTAL_API_KEY environment variable is not set"
+### VirusTotal App: "NEUROSHIELD_API_KEY environment variable is not set"
 
 **Problem:** API key is not configured.
 

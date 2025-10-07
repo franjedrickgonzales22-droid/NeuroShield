@@ -107,7 +107,7 @@ chmod +x start_*.sh
 ### ✅ Completed Tasks
 
 1. **API Configuration**
-   - VirusTotal API key configured (placeholder - needs user's key)
+   - NeuroShield API key configured (placeholder - needs user's key)
    - Environment files created with secure keys
 
 2. **ML Model**
@@ -146,7 +146,7 @@ UPLOAD_FOLDER=uploads
 ### VirusTotal Application (`.env`)
 
 ```env
-VIRUSTOTAL_API_KEY=<your-api-key>  # ⚠️ Needs user's actual key
+NEUROSHIELD_API_KEY=<your-api-key>  # ⚠️ Needs user's actual key
 FLASK_SECRET_KEY=<256-bit-key>
 ```
 
@@ -228,7 +228,7 @@ python train_model.py --extract-from-files /path/to/malware /path/to/benign
 
 ### Action Required
 
-1. **VirusTotal API Key:**
+1. **NeuroShield API Key:**
    - Get free key: https://www.virustotal.com/gui/my-apikey
    - Edit: `Virus_total_based/.env`
    - Replace: `your-api-key-here-replace-this`

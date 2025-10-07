@@ -181,7 +181,7 @@ Overall: 🎉 ALL ACCURACY VERIFICATIONS PASSED!
 - ✅ Configuration templates provided
 - ✅ Test suites available
 - ⚠️  ML model needs to be trained/provided
-- ⚠️  VirusTotal API key needs to be configured
+- ⚠️  NeuroShield API key needs to be configured
 
 ### Deployment Checklist
 - ✅ Python dependencies installable via requirements.txt
@@ -238,7 +238,7 @@ Overall: 🎉 ALL ACCURACY VERIFICATIONS PASSED!
 
 ### For VirusTotal Detection
 1. Install dependencies: `pip install -r Virus_total_based/requirements.txt`
-2. Get VirusTotal API key from https://www.virustotal.com
+2. Get NeuroShield API key from https://www.virustotal.com
 3. Configure API key in `.env` file
 4. Run: `python Virus_total_based/app.py`
 

@@ -137,7 +137,7 @@
    - Application will start but analysis will fail until model is provided
    - Warning message is displayed in logs
 
-2. **VirusTotal API Key:**
+2. **NeuroShield API Key:**
    - Required for actual scanning
    - Free tier has rate limits
    - Must be configured in `.env` file
@@ -151,7 +151,7 @@
 2. ✅ All dependencies can be installed from requirements.txt
 3. ✅ Configuration templates are provided
 4. ⚠️  Train and provide ML model for ML-based detection
-5. ⚠️  Obtain and configure VirusTotal API key
+5. ⚠️  Obtain and configure NeuroShield API key
 
 ### For Production Deployment
 1. Use a production WSGI server (e.g., Gunicorn)
@@ -201,7 +201,7 @@ The NeuroShield malware detection system has been thoroughly tested and verified
 
 **Next Steps:**
 1. Train ML model (if using ML-based detection)
-2. Configure VirusTotal API key (if using VirusTotal detection)
+2. Configure NeuroShield API key (if using VirusTotal detection)
 3. Deploy to production environment
 4. Monitor and maintain
 

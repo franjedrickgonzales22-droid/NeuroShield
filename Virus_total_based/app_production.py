@@ -45,9 +45,9 @@ limiter = Limiter(
 )
 
 # API configuration
-API_KEY = os.environ.get('VIRUSTOTAL_API_KEY')
+API_KEY = os.environ.get('NEUROSHIELD_API_KEY')
 if not API_KEY:
-    logger.warning("VIRUSTOTAL_API_KEY environment variable is not set")
+    logger.warning("NEUROSHIELD_API_KEY environment variable is not set")
     # Don't raise error, allow app to start but show warnings
 
 # API endpoints
@@ -66,7 +66,7 @@ def index():
 @limiter.limit("5 per minute")  # Strict rate limit for VirusTotal API
 def analyze():
     if not API_KEY or API_KEY == 'your-api-key-here-replace-this':
-        flash('VirusTotal API key not configured. Please set VIRUSTOTAL_API_KEY in .env file', 'error')
+        flash('NeuroShield API key not configured. Please set NEUROSHIELD_API_KEY in .env file', 'error')
         return redirect(url_for('index'))
     
     file_hash = request.form.get('file_hash', '').strip()
