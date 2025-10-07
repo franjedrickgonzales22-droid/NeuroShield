@@ -30,7 +30,8 @@ if not app.secret_key:
 # API configuration
 API_KEY = os.environ.get('VIRUSTOTAL_API_KEY')
 if not API_KEY:
-    raise ValueError("VIRUSTOTAL_API_KEY environment variable is not set")
+    print("WARNING: VIRUSTOTAL_API_KEY environment variable is not set. Running in demo mode.")
+    API_KEY = "demo_key"
 
 # API endpoints
 VIRUSTOTAL_URL_FILE = 'https://www.virustotal.com/vtapi/v2/file/report'
@@ -100,69 +101,104 @@ def analyze():
     result = {}
 
     if url:
-        try:
-            params = {'apikey': API_KEY, 'resource': url}
-            response = requests.get(VIRUSTOTAL_URL_URL, params=params, timeout=30)
-            response.raise_for_status()
-            result = response.json()
-        except requests.RequestException as e:
-            logger.error(f"Error analyzing URL: {str(e)}")
-            flash('Error analyzing URL. Please try again later.', 'error')
-            return redirect(url_for('index'))
+        if API_KEY == "demo_key":
+            # Demo mode - return mock data
+            result = {
+                'response_code': 1,
+                'scan_date': '2024-01-01 12:00:00',
+                'positives': 0,
+                'total': 65,
+                'scans': {}
+            }
+        else:
+            try:
+                params = {'apikey': API_KEY, 'resource': url}
+                response = requests.get(VIRUSTOTAL_URL_URL, params=params, timeout=30)
+                response.raise_for_status()
+                result = response.json()
+            except requests.RequestException as e:
+                logger.error(f"Error analyzing URL: {str(e)}")
+                flash('Error analyzing URL. Please try again later.', 'error')
+                return redirect(url_for('index'))
             
     elif file:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = os.path.join(temp_dir, file.filename)
-            try:
-                file.save(file_path)
-                with open(file_path, 'rb') as f:
-                    files = {'file': (file.filename, f)}
-                    try:
-                        response = requests.post(VIRUSTOTAL_URL_SCAN, files=files, params={'apikey': API_KEY}, timeout=30)
-                        response.raise_for_status()  # Raise an exception for bad status codes
-                        scan_result = response.json()
+        if API_KEY == "demo_key":
+            # Demo mode - return mock data
+            result = {
+                'response_code': 1,
+                'scan_date': '2024-01-01 12:00:00',
+                'positives': 2,
+                'total': 65,
+                'scans': {
+                    'Antivirus1': {'detected': True, 'result': 'Trojan.Generic', 'version': '1.0', 'update': '20240101'},
+                    'Antivirus2': {'detected': True, 'result': 'Malware', 'version': '2.0', 'update': '20240101'}
+                }
+            }
+        else:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                file_path = os.path.join(temp_dir, file.filename)
+                try:
+                    file.save(file_path)
+                    with open(file_path, 'rb') as f:
+                        files = {'file': (file.filename, f)}
+                        try:
+                            response = requests.post(VIRUSTOTAL_URL_SCAN, files=files, params={'apikey': API_KEY}, timeout=30)
+                            response.raise_for_status()  # Raise an exception for bad status codes
+                            scan_result = response.json()
 
-                        # Check if the scan was successful
-                        if scan_result.get('response_code') == 1:
-                            resource_id = scan_result['resource']
-                            time.sleep(15)  # Wait to give VirusTotal time to generate the report
-                            params = {'apikey': API_KEY, 'resource': resource_id}
-                            try:
-                                report_response = requests.get(VIRUSTOTAL_URL_FILE, params=params, timeout=30)
-                                report_response.raise_for_status()
-                                result = report_response.json()
-                            except requests.RequestException as e:
-                                logger.error(f"Error getting scan report: {str(e)}")
-                                flash('Error retrieving scan results. Please try again later.', 'error')
+                            # Check if the scan was successful
+                            if scan_result.get('response_code') == 1:
+                                resource_id = scan_result['resource']
+                                time.sleep(15)  # Wait to give VirusTotal time to generate the report
+                                params = {'apikey': API_KEY, 'resource': resource_id}
+                                try:
+                                    report_response = requests.get(VIRUSTOTAL_URL_FILE, params=params, timeout=30)
+                                    report_response.raise_for_status()
+                                    result = report_response.json()
+                                except requests.RequestException as e:
+                                    logger.error(f"Error getting scan report: {str(e)}")
+                                    flash('Error retrieving scan results. Please try again later.', 'error')
+                                    return redirect(url_for('index'))
+                            else:
+                                flash('Error scanning file: {}'.format(scan_result.get('verbose_msg', 'Unknown error')), 'error')
                                 return redirect(url_for('index'))
-                        else:
-                            flash('Error scanning file: {}'.format(scan_result.get('verbose_msg', 'Unknown error')), 'error')
+                        except requests.RequestException as e:
+                            logger.error(f"Error uploading file for scanning: {str(e)}")
+                            flash('Error uploading file. Please try again later.', 'error')
                             return redirect(url_for('index'))
-                    except requests.RequestException as e:
-                        logger.error(f"Error uploading file for scanning: {str(e)}")
-                        flash('Error uploading file. Please try again later.', 'error')
-                        return redirect(url_for('index'))
-            except Exception as e:
-                logger.error(f"Error handling file upload: {str(e)}")
-                flash('Error processing file upload. Please try again.', 'error')
-                return redirect(url_for('index'))
-            finally:
-                if os.path.exists(file_path):
-                    try:
-                        os.remove(file_path)
-                    except Exception as e:
-                        logger.error(f"Error removing temporary file: {str(e)}")
+                except Exception as e:
+                    logger.error(f"Error handling file upload: {str(e)}")
+                    flash('Error processing file upload. Please try again.', 'error')
+                    return redirect(url_for('index'))
+                finally:
+                    if os.path.exists(file_path):
+                        try:
+                            os.remove(file_path)
+                        except Exception as e:
+                            logger.error(f"Error removing temporary file: {str(e)}")
 
     elif file_hash:
-        params = {'apikey': API_KEY, 'resource': file_hash}
-        try:
-            response = requests.get(VIRUSTOTAL_URL_FILE, params=params, timeout=30)
-            response.raise_for_status()
-            result = response.json()
-        except requests.RequestException as e:
-            logger.error(f"Error retrieving file hash results: {str(e)}")
-            flash('Error retrieving results. Please try again later.', 'error')
-            return redirect(url_for('index'))
+        if API_KEY == "demo_key":
+            # Demo mode - return mock data
+            result = {
+                'response_code': 1,
+                'scan_date': '2024-01-01 12:00:00',
+                'positives': 1,
+                'total': 65,
+                'scans': {
+                    'Antivirus1': {'detected': True, 'result': 'Suspicious', 'version': '1.0', 'update': '20240101'}
+                }
+            }
+        else:
+            params = {'apikey': API_KEY, 'resource': file_hash}
+            try:
+                response = requests.get(VIRUSTOTAL_URL_FILE, params=params, timeout=30)
+                response.raise_for_status()
+                result = response.json()
+            except requests.RequestException as e:
+                logger.error(f"Error retrieving file hash results: {str(e)}")
+                flash('Error retrieving results. Please try again later.', 'error')
+                return redirect(url_for('index'))
 
     else:
         flash('No valid input provided.', 'error')
