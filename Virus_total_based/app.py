@@ -30,7 +30,8 @@ if not app.secret_key:
 # API configuration
 API_KEY = os.environ.get('VIRUSTOTAL_API_KEY')
 if not API_KEY:
-    raise ValueError("VIRUSTOTAL_API_KEY environment variable is not set")
+    logger.warning("VIRUSTOTAL_API_KEY environment variable is not set. VirusTotal features will be disabled.")
+    API_KEY = None
 
 # API endpoints
 VIRUSTOTAL_URL_FILE = 'https://www.virustotal.com/vtapi/v2/file/report'
@@ -100,6 +101,9 @@ def analyze():
     result = {}
 
     if url:
+        if not API_KEY:
+            flash('VirusTotal API key not configured. Please set VIRUSTOTAL_API_KEY environment variable.', 'error')
+            return redirect(url_for('index'))
         try:
             params = {'apikey': API_KEY, 'resource': url}
             response = requests.get(VIRUSTOTAL_URL_URL, params=params, timeout=30)
@@ -111,6 +115,9 @@ def analyze():
             return redirect(url_for('index'))
             
     elif file:
+        if not API_KEY:
+            flash('VirusTotal API key not configured. Please set VIRUSTOTAL_API_KEY environment variable.', 'error')
+            return redirect(url_for('index'))
         with tempfile.TemporaryDirectory() as temp_dir:
             file_path = os.path.join(temp_dir, file.filename)
             try:
@@ -154,6 +161,9 @@ def analyze():
                         logger.error(f"Error removing temporary file: {str(e)}")
 
     elif file_hash:
+        if not API_KEY:
+            flash('VirusTotal API key not configured. Please set VIRUSTOTAL_API_KEY environment variable.', 'error')
+            return redirect(url_for('index'))
         params = {'apikey': API_KEY, 'resource': file_hash}
         try:
             response = requests.get(VIRUSTOTAL_URL_FILE, params=params, timeout=30)
@@ -206,5 +216,6 @@ def analyze():
     return render_template('result.html', result=formatted_result, chart_data=chart_data)
 
 if __name__ == '__main__':
-    app.run(debug=False, threaded=True)
+    port = int(os.getenv('FLASK_PORT', 5002))
+    app.run(debug=False, threaded=True, port=port)
 

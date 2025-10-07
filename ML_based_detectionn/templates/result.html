@@ -54,10 +54,16 @@
             {% if result.prediction == "Malware" %}
                 <div class="alert alert-danger text-center" role="alert">
                     <i class="bi bi-exclamation-triangle-fill"></i> Malware Detected in File: {{ result.file_name }}! Please take caution.
+                    {% if result.confidence %}
+                        <br><small>Confidence: {{ "%.1f"|format(result.confidence) }}%</small>
+                    {% endif %}
                 </div>
             {% else %}
                 <div class="alert alert-success text-center" role="alert">
                     <i class="bi bi-shield-check-fill"></i> No Malware Detected in File: {{ result.file_name }}! Your file is clean.
+                    {% if result.confidence %}
+                        <br><small>Confidence: {{ "%.1f"|format(result.confidence) }}%</small>
+                    {% endif %}
                 </div>
             {% endif %}
         {% elif result.type == "virustotal" %}
