@@ -23,7 +23,7 @@ All website names and references have been updated to use the **NeuroShield** br
 
 **File:** `ML_based_detectionn/templates/result.html`
 - Page Title: `NeuroShield - Analysis Result`
-- Footer: `© 2025 NeuroShield. All Rights Reserved by B & L.`
+- Footer: `© 2025 NeuroShield. All Rights Reserved by F.J.G.`
 
 ---
 
@@ -35,13 +35,13 @@ All website names and references have been updated to use the **NeuroShield** br
 - Navigation: Updated links
 
 **File:** `Virus_total_based/templates/result.html`
-- Footer: `© 2025 NeuroShield. All Rights Reserved by B & L.`
+- Footer: `© 2025 NeuroShield. All Rights Reserved by F.J.G.`
 - Chart Titles: 
   - `NeuroShield Detection Results (Bar Chart)`
   - `NeuroShield Detection Results (Pie Chart)`
 
 **File:** `Virus_total_based/templates/details.html`
-- Footer: `© 2025 NeuroShield. All Rights Reserved by B & L.`
+- Footer: `© 2025 NeuroShield. All Rights Reserved by F.J.G.`
 
 ---
 
@@ -79,7 +79,7 @@ The applications are now branded as **NeuroShield** and can be configured to use
 - **Tagline VT:** Threat Intelligence Platform
 
 ### Copyright
-- **Format:** `© 2025 NeuroShield. All Rights Reserved by B & L.`
+- **Format:** `© 2025 NeuroShield. All Rights Reserved by F.J.G.`
 
 ### Navigation Links
 Both applications now use:

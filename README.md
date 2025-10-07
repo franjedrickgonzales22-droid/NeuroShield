@@ -1,6 +1,8 @@
-# NeuroShield
+# NeuroShield - Malware Detection with Machine Learning
 
 A comprehensive malware detection system that combines machine learning and VirusTotal integration to identify malicious software.
+
+**Developed by F.J.G**
 
 ## Features
 
@@ -71,8 +73,14 @@ NeuroShield/
 
 ## License
 
-All Rights Reserved by B & L.
+All Rights Reserved by F.J.G.
 
 ## Contributors
 
 Developed as part of an INSA (Institut National des Sciences Appliquées) project.
+5
+
+## License
+
+© 2025 NeuroShield. All Rights Reserved.  
+Developed by F.J.G.

@@ -278,6 +278,6 @@ For issues or questions:
 
 ## License
 
-All Rights Reserved by B & L.
+All Rights Reserved by F.J.G.
 
 Developed as part of an INSA project.

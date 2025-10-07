@@ -350,5 +350,5 @@ python train_model.py --extract-from-files /path/to/malware /path/to/benign
 - Test with: `python test_complete_app.py`
 - Verify: `python verify_accuracy.py`
 
-**Developed by:** B & L  
+**Developed by:** F.J.G  
 **Project:** INSA Malware Detection System
