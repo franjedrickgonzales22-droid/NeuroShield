@@ -1,16 +1,12 @@
 import os
+import tempfile
+import time
+import logging
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, flash, redirect, url_for
 import requests
 import defusedxml.ElementTree as ET
 from defusedxml import defuse_stdlib
-
-# Ensure defusedxml is used instead of standard xml
-defuse_stdlib()
-import tempfile
-import time
-import logging
-from secrets import token_hex
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,15 +18,16 @@ defuse_stdlib()
 load_dotenv()
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
+)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')
 if not app.secret_key:
     app.secret_key = os.urandom(24)
 
-# API configuration
+# API configuration (do not fail at import time)
 API_KEY = os.environ.get('VIRUSTOTAL_API_KEY')
-if not API_KEY:
-    raise ValueError("VIRUSTOTAL_API_KEY environment variable is not set")
 
 # API endpoints
 VIRUSTOTAL_URL_FILE = 'https://www.virustotal.com/vtapi/v2/file/report'
@@ -38,8 +35,6 @@ VIRUSTOTAL_URL_SCAN = 'https://www.virustotal.com/vtapi/v2/file/scan'
 VIRUSTOTAL_URL_URL = 'https://www.virustotal.com/vtapi/v2/url/report'
 
 # No need for a permanent upload folder since we're using TemporaryDirectory
-
-import tempfile
 
 recent_results = []
 
@@ -100,6 +95,9 @@ def analyze():
     result = {}
 
     if url:
+        if not API_KEY:
+            flash('VirusTotal API key is not configured.', 'error')
+            return redirect(url_for('index'))
         try:
             params = {'apikey': API_KEY, 'resource': url}
             response = requests.get(VIRUSTOTAL_URL_URL, params=params, timeout=30)
@@ -111,6 +109,9 @@ def analyze():
             return redirect(url_for('index'))
             
     elif file:
+        if not API_KEY:
+            flash('VirusTotal API key is not configured.', 'error')
+            return redirect(url_for('index'))
         with tempfile.TemporaryDirectory() as temp_dir:
             file_path = os.path.join(temp_dir, file.filename)
             try:
@@ -154,6 +155,9 @@ def analyze():
                         logger.error(f"Error removing temporary file: {str(e)}")
 
     elif file_hash:
+        if not API_KEY:
+            flash('VirusTotal API key is not configured.', 'error')
+            return redirect(url_for('index'))
         params = {'apikey': API_KEY, 'resource': file_hash}
         try:
             response = requests.get(VIRUSTOTAL_URL_FILE, params=params, timeout=30)
@@ -206,5 +210,8 @@ def analyze():
     return render_template('result.html', result=formatted_result, chart_data=chart_data)
 
 if __name__ == '__main__':
-    app.run(debug=False, threaded=True)
+    # Run on 5000 by default; allow override via env
+    host = os.environ.get('FLASK_HOST', '127.0.0.1')
+    port = int(os.environ.get('FLASK_PORT', '5000'))
+    app.run(host=host, port=port, debug=False, threaded=True)
 
