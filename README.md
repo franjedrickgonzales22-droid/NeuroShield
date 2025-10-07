@@ -57,8 +57,9 @@ NeuroShield/
 │   ├── templates/            # HTML templates
 │   ├── uploads/              # Uploaded files directory
 │   └── ML_model/             # Trained ML models
-├── Virus_total_based/        # VirusTotal integration
-│   ├── app.py                # Flask application
+├── Virus_total_based/        # NeuroShield Threat Intelligence API
+│   ├── app.py                # Flask application (threat intelligence)
+│   ├── app_production.py     # Production API server
 │   └── templates/            # HTML templates
 └── README.md                 # This file
 ```

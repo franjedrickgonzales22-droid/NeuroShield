@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Production-ready VirusTotal Flask application with rate limiting
-"""
+Production-ready NeuroShield Threat Intelligence API with rate limiting
+""
 import os
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, flash, redirect, url_for
@@ -18,7 +18,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('virustotal.log'),
+        logging.FileHandler('neuroshield-api.log'),
         logging.StreamHandler()
     ]
 )
@@ -50,10 +50,10 @@ if not API_KEY:
     logger.warning("NEUROSHIELD_API_KEY environment variable is not set")
     # Don't raise error, allow app to start but show warnings
 
-# API endpoints
-VIRUSTOTAL_URL_FILE = 'https://www.virustotal.com/vtapi/v2/file/report'
-VIRUSTOTAL_URL_SCAN = 'https://www.virustotal.com/vtapi/v2/file/scan'
-VIRUSTOTAL_URL_URL = 'https://www.virustotal.com/vtapi/v2/url/report'
+# NeuroShield API endpoints (powered by threat intelligence integration)
+NEUROSHIELD_URL_FILE = 'https://www.virustotal.com/vtapi/v2/file/report'
+NEUROSHIELD_URL_SCAN = 'https://www.virustotal.com/vtapi/v2/file/scan'
+NEUROSHIELD_URL_URL = 'https://www.virustotal.com/vtapi/v2/url/report'
 
 recent_results = []
 
@@ -63,7 +63,7 @@ def index():
     return render_template('index.html', recent_results=recent_results)
 
 @app.route('/analyze', methods=['POST'])
-@limiter.limit("5 per minute")  # Strict rate limit for VirusTotal API
+@limiter.limit("5 per minute")  # Strict rate limit for NeuroShield API
 def analyze():
     if not API_KEY or API_KEY == 'your-api-key-here-replace-this':
         flash('NeuroShield API key not configured. Please set NEUROSHIELD_API_KEY in .env file', 'error')
@@ -122,7 +122,7 @@ def analyze():
     if url:
         try:
             params = {'apikey': API_KEY, 'resource': url}
-            response = requests.get(VIRUSTOTAL_URL_URL, params=params, timeout=30)
+            response = requests.get(NEUROSHIELD_URL_URL, params=params, timeout=30)
             response.raise_for_status()
             result = response.json()
         except requests.RequestException as e:
@@ -138,7 +138,7 @@ def analyze():
                 with open(file_path, 'rb') as f:
                     files = {'file': (file.filename, f)}
                     try:
-                        response = requests.post(VIRUSTOTAL_URL_SCAN, files=files, params={'apikey': API_KEY}, timeout=30)
+                        response = requests.post(NEUROSHIELD_URL_SCAN, files=files, params={'apikey': API_KEY}, timeout=30)
                         response.raise_for_status()
                         scan_result = response.json()
 
@@ -147,7 +147,7 @@ def analyze():
                             time.sleep(15)
                             params = {'apikey': API_KEY, 'resource': resource_id}
                             try:
-                                report_response = requests.get(VIRUSTOTAL_URL_FILE, params=params, timeout=30)
+                                report_response = requests.get(NEUROSHIELD_URL_FILE, params=params, timeout=30)
                                 report_response.raise_for_status()
                                 result = report_response.json()
                             except requests.RequestException as e:
@@ -169,7 +169,7 @@ def analyze():
     elif file_hash:
         params = {'apikey': API_KEY, 'resource': file_hash}
         try:
-            response = requests.get(VIRUSTOTAL_URL_FILE, params=params, timeout=30)
+            response = requests.get(NEUROSHIELD_URL_FILE, params=params, timeout=30)
             response.raise_for_status()
             result = response.json()
         except requests.RequestException as e:

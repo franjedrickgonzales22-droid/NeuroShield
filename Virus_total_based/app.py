@@ -32,10 +32,10 @@ API_KEY = os.environ.get('NEUROSHIELD_API_KEY')
 if not API_KEY:
     raise ValueError("NEUROSHIELD_API_KEY environment variable is not set")
 
-# API endpoints
-VIRUSTOTAL_URL_FILE = 'https://www.virustotal.com/vtapi/v2/file/report'
-VIRUSTOTAL_URL_SCAN = 'https://www.virustotal.com/vtapi/v2/file/scan'
-VIRUSTOTAL_URL_URL = 'https://www.virustotal.com/vtapi/v2/url/report'
+# NeuroShield API endpoints (powered by threat intelligence integration)
+NEUROSHIELD_URL_FILE = 'https://www.virustotal.com/vtapi/v2/file/report'
+NEUROSHIELD_URL_SCAN = 'https://www.virustotal.com/vtapi/v2/file/scan'
+NEUROSHIELD_URL_URL = 'https://www.virustotal.com/vtapi/v2/url/report'
 
 # No need for a permanent upload folder since we're using TemporaryDirectory
 
@@ -102,7 +102,7 @@ def analyze():
     if url:
         try:
             params = {'apikey': API_KEY, 'resource': url}
-            response = requests.get(VIRUSTOTAL_URL_URL, params=params, timeout=30)
+            response = requests.get(NEUROSHIELD_URL_URL, params=params, timeout=30)
             response.raise_for_status()
             result = response.json()
         except requests.RequestException as e:
@@ -118,17 +118,17 @@ def analyze():
                 with open(file_path, 'rb') as f:
                     files = {'file': (file.filename, f)}
                     try:
-                        response = requests.post(VIRUSTOTAL_URL_SCAN, files=files, params={'apikey': API_KEY}, timeout=30)
+                        response = requests.post(NEUROSHIELD_URL_SCAN, files=files, params={'apikey': API_KEY}, timeout=30)
                         response.raise_for_status()  # Raise an exception for bad status codes
                         scan_result = response.json()
 
                         # Check if the scan was successful
                         if scan_result.get('response_code') == 1:
                             resource_id = scan_result['resource']
-                            time.sleep(15)  # Wait to give VirusTotal time to generate the report
+                            time.sleep(15)  # Wait for threat analysis report to be generated
                             params = {'apikey': API_KEY, 'resource': resource_id}
                             try:
-                                report_response = requests.get(VIRUSTOTAL_URL_FILE, params=params, timeout=30)
+                                report_response = requests.get(NEUROSHIELD_URL_FILE, params=params, timeout=30)
                                 report_response.raise_for_status()
                                 result = report_response.json()
                             except requests.RequestException as e:
@@ -156,7 +156,7 @@ def analyze():
     elif file_hash:
         params = {'apikey': API_KEY, 'resource': file_hash}
         try:
-            response = requests.get(VIRUSTOTAL_URL_FILE, params=params, timeout=30)
+            response = requests.get(NEUROSHIELD_URL_FILE, params=params, timeout=30)
             response.raise_for_status()
             result = response.json()
         except requests.RequestException as e:
