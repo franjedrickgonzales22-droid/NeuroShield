@@ -30,13 +30,21 @@ logging.basicConfig(
 UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'exe', 'dll'}
+
 # Load the ML model with error handling
 try:
-    model = joblib.load('ML_model/malwareclassifier-V2.pkl')
-    logging.info("Model loaded successfully")
+    model_path = os.path.join('ML_based_detectionn', 'ML_model', 'malwareclassifier-V2.pkl')
+    if not os.path.exists(model_path):
+        logging.warning(f"Model file not found at {model_path}. Please train and save a model first.")
+        model = None
+    else:
+        model = joblib.load(model_path)
+        logging.info("Model loaded successfully")
 except Exception as e:
     logging.error(f"Failed to load model: {str(e)}")
-    raise RuntimeError("Application failed to initialize - model not loaded")
+    model = None
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -62,25 +70,23 @@ def analyze():
 
         # Use the model for prediction if the file is `.exe` or `.dll`
         if allowed_file(file.filename):
-            features = extract_features(file_path)  # Your feature extraction function
-            prediction = model.predict(features)     # Predict using your model
-            result = {
-                "type": "file",
-                "prediction": "Malware" if prediction[0] == 1 else "Safe",
-                "file_name": file.filename
-            }
+            if model is None:
+                return render_template('index.html', error="Model not loaded. Please contact administrator.")
+            try:
+                features = extract_features(file_path)  # Your feature extraction function
+                prediction = model.predict(features)     # Predict using your model
+                result = {
+                    "type": "file",
+                    "prediction": "Malware" if prediction[0] == 1 else "Safe",
+                    "file_name": file.filename
+                }
+            except Exception as e:
+                logging.error(f"Error during prediction: {str(e)}")
+                return render_template('index.html', error=f"Error analyzing file: {str(e)}")
 
         return render_template('result.html', result=result)
 
     return render_template('index.html', error="No file uploaded.")
-
-import os
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
-
-# ...existing code...
 
 if __name__ == '__main__':
     # Get environment settings with secure defaults
