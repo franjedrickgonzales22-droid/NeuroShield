@@ -30,6 +30,9 @@ logging.basicConfig(
 UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Allowed file extensions for malware analysis
+ALLOWED_EXTENSIONS = {'exe', 'dll', 'scr', 'com', 'pif', 'bat', 'cmd'}
+
 # Load the ML model with error handling
 try:
     model = joblib.load('ML_model/malwareclassifier-V2.pkl')
@@ -73,14 +76,6 @@ def analyze():
         return render_template('result.html', result=result)
 
     return render_template('index.html', error="No file uploaded.")
-
-import os
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
-
-# ...existing code...
 
 if __name__ == '__main__':
     # Get environment settings with secure defaults

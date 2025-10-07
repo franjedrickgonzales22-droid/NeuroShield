@@ -30,7 +30,8 @@ if not app.secret_key:
 # API configuration
 API_KEY = os.environ.get('VIRUSTOTAL_API_KEY')
 if not API_KEY:
-    raise ValueError("VIRUSTOTAL_API_KEY environment variable is not set")
+    logger.warning("VIRUSTOTAL_API_KEY environment variable is not set. Please set it to use VirusTotal features.")
+    API_KEY = None  # Allow app to start but show warning
 
 # API endpoints
 VIRUSTOTAL_URL_FILE = 'https://www.virustotal.com/vtapi/v2/file/report'
@@ -49,6 +50,11 @@ def index():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
+    # Check if API key is available
+    if not API_KEY:
+        flash('VirusTotal API key is not configured. Please set VIRUSTOTAL_API_KEY environment variable.', 'error')
+        return redirect(url_for('index'))
+    
     file_hash = request.form.get('file_hash', '').strip()
     xml_data = request.form.get('xml_data', '').strip()
     file = request.files.get('file')
