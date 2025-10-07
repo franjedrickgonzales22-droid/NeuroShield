@@ -27,10 +27,10 @@ app.secret_key = os.environ.get('FLASK_SECRET_KEY')
 if not app.secret_key:
     app.secret_key = os.urandom(24)
 
-# API configuration
+# API configuration (optional for local dev: allows app to start without key)
 API_KEY = os.environ.get('VIRUSTOTAL_API_KEY')
 if not API_KEY:
-    raise ValueError("VIRUSTOTAL_API_KEY environment variable is not set")
+    logger.warning("VIRUSTOTAL_API_KEY is not set. URL/file scanning will be disabled.")
 
 # API endpoints
 VIRUSTOTAL_URL_FILE = 'https://www.virustotal.com/vtapi/v2/file/report'
@@ -101,6 +101,9 @@ def analyze():
 
     if url:
         try:
+            if not API_KEY:
+                flash('API key not configured. URL analysis is unavailable.', 'error')
+                return redirect(url_for('index'))
             params = {'apikey': API_KEY, 'resource': url}
             response = requests.get(VIRUSTOTAL_URL_URL, params=params, timeout=30)
             response.raise_for_status()
@@ -118,6 +121,9 @@ def analyze():
                 with open(file_path, 'rb') as f:
                     files = {'file': (file.filename, f)}
                     try:
+                        if not API_KEY:
+                            flash('API key not configured. File scanning is unavailable.', 'error')
+                            return redirect(url_for('index'))
                         response = requests.post(VIRUSTOTAL_URL_SCAN, files=files, params={'apikey': API_KEY}, timeout=30)
                         response.raise_for_status()  # Raise an exception for bad status codes
                         scan_result = response.json()
@@ -156,6 +162,9 @@ def analyze():
     elif file_hash:
         params = {'apikey': API_KEY, 'resource': file_hash}
         try:
+            if not API_KEY:
+                flash('API key not configured. Hash lookup is unavailable.', 'error')
+                return redirect(url_for('index'))
             response = requests.get(VIRUSTOTAL_URL_FILE, params=params, timeout=30)
             response.raise_for_status()
             result = response.json()
