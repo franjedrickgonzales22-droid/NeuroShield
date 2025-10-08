@@ -1,7 +1,7 @@
 import os
 import logging
 from dotenv import load_dotenv
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect, url_for, flash
 import joblib
 from feature_extraction import extract_features
 
@@ -61,12 +61,16 @@ except Exception as e:
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 
-@app.route('/analyze', methods=['POST'])
+@app.route('/analyze', methods=['GET', 'POST'])
 def analyze():
+    # Redirect GET requests to home page
+    if request.method == 'GET':
+        return redirect(url_for('index'))
+    
     # Check if a file is uploaded
     if 'file' in request.files:
         file = request.files['file']

@@ -43,12 +43,17 @@ import tempfile
 
 recent_results = []
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     return render_template('index.html', recent_results=recent_results)
 
-@app.route('/analyze', methods=['POST'])
+@app.route('/analyze', methods=['GET', 'POST'])
 def analyze():
+    # Redirect GET requests to home page
+    if request.method == 'GET':
+        flash('Please use the form to submit your analysis.', 'info')
+        return redirect(url_for('index'))
+    
     file_hash = request.form.get('file_hash', '').strip()
     xml_data = request.form.get('xml_data', '').strip()
     file = request.files.get('file')

@@ -72,9 +72,14 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
-@app.route('/analyze', methods=['POST'])
+@app.route('/analyze', methods=['GET', 'POST'])
 @limiter.limit("10 per minute")  # Stricter limit for analysis endpoint
 def analyze():
+    # Redirect GET requests to home page
+    if request.method == 'GET':
+        flash('Please use the form to submit your analysis.', 'info')
+        return redirect(url_for('index'))
+    
     # Check if a file is uploaded
     if 'file' in request.files:
         file = request.files['file']
