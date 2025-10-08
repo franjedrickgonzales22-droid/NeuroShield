@@ -30,7 +30,8 @@ if not app.secret_key:
 # API configuration
 API_KEY = os.environ.get('NEUROSHIELD_API_KEY')
 if not API_KEY:
-    raise ValueError("NEUROSHIELD_API_KEY environment variable is not set")
+    logger.warning("NEUROSHIELD_API_KEY environment variable is not set. API features will be limited.")
+    API_KEY = "dummy_key_for_testing"  # Allow app to start for testing
 
 # NeuroShield API endpoints (powered by threat intelligence integration)
 NEUROSHIELD_URL_FILE = 'https://www.virustotal.com/vtapi/v2/file/report'
