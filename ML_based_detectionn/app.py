@@ -71,38 +71,78 @@ def analyze():
     if request.method == 'GET':
         return redirect(url_for('index'))
     
-    # Check if a file is uploaded
-    if 'file' in request.files:
+    try:
+        # Check if a file is uploaded
+        if 'file' not in request.files:
+            logging.warning("No file in request")
+            return render_template('index.html', error="No file uploaded. Please select a file.")
+        
         file = request.files['file']
         
-        if file.filename == '' or not allowed_file(file.filename):
-            return render_template('index.html', error="Unsupported file type.")
+        # Check if file was selected
+        if file.filename == '':
+            logging.warning("Empty filename")
+            return render_template('index.html', error="No file selected. Please choose a file.")
         
-        # Construct the full file path
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-
+        # Check file extension
+        if not allowed_file(file.filename):
+            logging.warning(f"Invalid file type: {file.filename}")
+            return render_template('index.html', error=f"Invalid file type. Only .exe and .dll files are supported. You uploaded: {file.filename}")
+        
+        # Check if model is loaded
+        if model is None:
+            logging.error("Model not loaded")
+            return render_template('index.html', error="Malware detection model is not loaded. Please contact administrator.")
+        
+        # Construct the full file path with sanitized filename
+        safe_filename = os.path.basename(file.filename)  # Prevent directory traversal
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_filename)
+        
         # Save the file
+        logging.info(f"Saving file: {safe_filename}")
         file.save(file_path)
-
-        # Use the model for prediction if the file is `.exe` or `.dll`
-        if allowed_file(file.filename):
-            if model is None:
-                return render_template('index.html', error="Model not loaded. Please contact administrator.")
-            try:
-                features = extract_features(file_path)  # Your feature extraction function
-                prediction = model.predict(features)     # Predict using your model
-                result = {
-                    "type": "file",
-                    "prediction": "Malware" if prediction[0] == 1 else "Safe",
-                    "file_name": file.filename
-                }
-            except Exception as e:
-                logging.error(f"Error during prediction: {str(e)}")
-                return render_template('index.html', error=f"Error analyzing file: {str(e)}")
-
+        logging.info(f"File saved successfully: {file_path}")
+        
+        # Extract features and predict
+        logging.info(f"Extracting features from: {safe_filename}")
+        features = extract_features(file_path)
+        
+        logging.info(f"Running prediction on: {safe_filename}")
+        prediction = model.predict(features)
+        
+        # Create result
+        result = {
+            "type": "file",
+            "prediction": "Malware" if prediction[0] == 1 else "Safe",
+            "file_name": safe_filename,
+            "confidence": f"{float(max(prediction[0], 1 - prediction[0])) * 100:.1f}%"
+        }
+        
+        logging.info(f"Analysis complete: {safe_filename} - {result['prediction']}")
+        
+        # Clean up uploaded file after analysis
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                logging.info(f"Cleaned up file: {file_path}")
+        except Exception as cleanup_error:
+            logging.warning(f"Could not delete temp file: {cleanup_error}")
+        
         return render_template('result.html', result=result)
-
-    return render_template('index.html', error="No file uploaded.")
+    
+    except Exception as e:
+        # Log the full error for debugging
+        logging.error(f"Error during file analysis: {str(e)}", exc_info=True)
+        
+        # Clean up file if it exists
+        try:
+            if 'file_path' in locals() and os.path.exists(file_path):
+                os.remove(file_path)
+        except:
+            pass
+        
+        # Return user-friendly error
+        return render_template('index.html', error=f"An error occurred while analyzing the file. Please try again. Error details: {str(e)}")
 
 if __name__ == '__main__':
     # Get environment settings with secure defaults
