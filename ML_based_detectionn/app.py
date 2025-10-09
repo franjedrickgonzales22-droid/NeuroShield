@@ -364,6 +364,11 @@ def delete_file():
         logging.error(f"Error deleting file: {e}")
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/performance')
+def performance_page():
+    """Show performance metrics page"""
+    return render_template('performance.html')
+
 @app.route('/quarantine_manager')
 def quarantine_manager_page():
     """Show quarantine management page"""
