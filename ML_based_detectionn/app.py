@@ -87,7 +87,7 @@ def analyze():
         # Check file extension
         if not allowed_file(file.filename):
             logging.warning(f"Invalid file type: {file.filename}")
-            return render_template('index.html', error=f"Invalid file type. Only .exe and .dll files are supported. You uploaded: {file.filename}")
+            return render_template('index.html', error=f"Invalid file type. Only .exe, .dll, and .txt files are supported. You uploaded: {file.filename}")
         
         # Check if model is loaded
         if model is None:
@@ -103,22 +103,64 @@ def analyze():
         file.save(file_path)
         logging.info(f"File saved successfully: {file_path}")
         
-        # Extract features and predict
-        logging.info(f"Extracting features from: {safe_filename}")
-        features = extract_features(file_path)
+        # Check file extension to determine analysis type
+        file_ext = safe_filename.rsplit('.', 1)[1].lower()
         
-        logging.info(f"Running prediction on: {safe_filename}")
-        prediction = model.predict(features)
+        if file_ext == 'txt':
+            # Handle text files - simple content analysis
+            logging.info(f"Analyzing text file: {safe_filename}")
+            
+            try:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read(10000)  # Read first 10KB
+                
+                # Simple heuristic analysis for text files
+                suspicious_keywords = ['malware', 'virus', 'exploit', 'payload', 'shell', 'backdoor', 
+                                      'ransomware', 'trojan', 'rootkit', 'keylogger', 'botnet']
+                
+                content_lower = content.lower()
+                found_keywords = [kw for kw in suspicious_keywords if kw in content_lower]
+                
+                # Determine if suspicious
+                is_suspicious = len(found_keywords) >= 3
+                
+                result = {
+                    "type": "text",
+                    "prediction": "Suspicious" if is_suspicious else "Safe",
+                    "file_name": safe_filename,
+                    "confidence": f"{min(len(found_keywords) * 20, 90)}%" if is_suspicious else "90%",
+                    "note": "Text file analysis - basic keyword detection"
+                }
+                
+                logging.info(f"Text file analysis complete: {safe_filename} - {result['prediction']}")
+            
+            except Exception as txt_error:
+                logging.error(f"Error reading text file: {txt_error}")
+                result = {
+                    "type": "text",
+                    "prediction": "Unknown",
+                    "file_name": safe_filename,
+                    "confidence": "N/A",
+                    "note": "Could not analyze text file"
+                }
         
-        # Create result
-        result = {
-            "type": "file",
-            "prediction": "Malware" if prediction[0] == 1 else "Safe",
-            "file_name": safe_filename,
-            "confidence": f"{float(max(prediction[0], 1 - prediction[0])) * 100:.1f}%"
-        }
-        
-        logging.info(f"Analysis complete: {safe_filename} - {result['prediction']}")
+        else:
+            # Handle executable files (.exe, .dll) with ML model
+            logging.info(f"Extracting features from: {safe_filename}")
+            features = extract_features(file_path)
+            
+            logging.info(f"Running prediction on: {safe_filename}")
+            prediction = model.predict(features)
+            
+            # Create result
+            result = {
+                "type": "file",
+                "prediction": "Malware" if prediction[0] == 1 else "Safe",
+                "file_name": safe_filename,
+                "confidence": f"{float(max(prediction[0], 1 - prediction[0])) * 100:.1f}%"
+            }
+            
+            logging.info(f"Analysis complete: {safe_filename} - {result['prediction']}")
         
         # Clean up uploaded file after analysis
         try:
