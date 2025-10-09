@@ -99,7 +99,7 @@ def analyze():
         # Check file extension
         if not allowed_file(file.filename):
             logging.warning(f"Invalid file type: {file.filename}")
-            return render_template('index.html', error=f"Invalid file type. Only .exe, .dll, and .txt files are supported. You uploaded: {file.filename}")
+            return render_template('index.html', error=f"Invalid file type. Only .exe, .dll, .txt, and .pdf files are supported. You uploaded: {file.filename}")
         
         # Check if model is loaded
         if model is None:
@@ -154,6 +154,91 @@ def analyze():
                     "file_name": safe_filename,
                     "confidence": "N/A",
                     "note": "Could not analyze text file"
+                }
+        
+        elif file_ext == 'pdf':
+            # Handle PDF files - comprehensive analysis
+            logging.info(f"Analyzing PDF file: {safe_filename}")
+            
+            try:
+                # Read PDF file in binary mode
+                with open(file_path, 'rb') as f:
+                    pdf_data = f.read()
+                
+                # Convert to string for analysis
+                pdf_text = pdf_data.decode('latin-1', errors='ignore')
+                
+                # Suspicious indicators for PDFs
+                suspicious_count = 0
+                findings = []
+                
+                # Check for JavaScript (often used in malicious PDFs)
+                if '/JavaScript' in pdf_text or '/JS' in pdf_text:
+                    suspicious_count += 2
+                    findings.append("Contains JavaScript")
+                
+                # Check for auto-actions
+                if '/OpenAction' in pdf_text or '/AA' in pdf_text:
+                    suspicious_count += 2
+                    findings.append("Contains auto-action")
+                
+                # Check for embedded files
+                if '/EmbeddedFile' in pdf_text:
+                    suspicious_count += 1
+                    findings.append("Contains embedded files")
+                
+                # Check for launch actions
+                if '/Launch' in pdf_text:
+                    suspicious_count += 3
+                    findings.append("Contains launch action (HIGH RISK)")
+                
+                # Check for URI/URL actions
+                if '/URI' in pdf_text:
+                    suspicious_count += 1
+                    findings.append("Contains URI/URL")
+                
+                # Check for suspicious keywords
+                pdf_lower = pdf_text.lower()
+                malicious_keywords = ['exploit', 'payload', 'shell', 'malware', 'backdoor', 'rootkit']
+                found_mal_keywords = [kw for kw in malicious_keywords if kw in pdf_lower]
+                if found_mal_keywords:
+                    suspicious_count += len(found_mal_keywords)
+                    findings.append(f"Suspicious keywords: {', '.join(found_mal_keywords)}")
+                
+                # Check for encryption
+                if '/Encrypt' in pdf_text:
+                    findings.append("Encrypted PDF")
+                
+                # Check file size (unusually large PDFs can be suspicious)
+                file_size = len(pdf_data)
+                if file_size > 10 * 1024 * 1024:  # > 10MB
+                    suspicious_count += 1
+                    findings.append("Large file size")
+                
+                # Determine classification
+                is_suspicious = suspicious_count >= 3
+                risk_level = "HIGH RISK" if suspicious_count >= 5 else ("MEDIUM RISK" if suspicious_count >= 3 else "LOW RISK")
+                
+                result = {
+                    "type": "pdf",
+                    "prediction": "Suspicious" if is_suspicious else "Safe",
+                    "file_name": safe_filename,
+                    "confidence": f"{min(suspicious_count * 15, 95)}%" if is_suspicious else f"{max(100 - suspicious_count * 10, 85)}%",
+                    "note": f"PDF analysis - {risk_level}",
+                    "findings": findings if findings else ["No suspicious indicators found"]
+                }
+                
+                logging.info(f"PDF analysis complete: {safe_filename} - {result['prediction']} ({len(findings)} findings)")
+            
+            except Exception as pdf_error:
+                logging.error(f"Error analyzing PDF: {pdf_error}")
+                result = {
+                    "type": "pdf",
+                    "prediction": "Unknown",
+                    "file_name": safe_filename,
+                    "confidence": "N/A",
+                    "note": "Could not analyze PDF file",
+                    "findings": [f"Analysis error: {str(pdf_error)}"]
                 }
         
         else:
