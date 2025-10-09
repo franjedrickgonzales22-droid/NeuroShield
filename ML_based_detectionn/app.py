@@ -271,14 +271,10 @@ def analyze():
             
             logging.info(f"Analysis complete: {safe_filename} - {result['prediction']} ({confidence:.1f}% confidence)")
         
-        # Clean up uploaded file after analysis
-        try:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-                logging.info(f"Cleaned up file: {file_path}")
-        except Exception as cleanup_error:
-            logging.warning(f"Could not delete temp file: {cleanup_error}")
+        # Store file path in result for potential quarantine/cleaning
+        result['file_path'] = file_path
         
+        # Don't delete yet - let user choose action
         return render_template('result.html', result=result)
     
     except Exception as e:
@@ -294,6 +290,140 @@ def analyze():
         
         # Return user-friendly error
         return render_template('index.html', error=f"An error occurred while analyzing the file. Please try again. Error details: {str(e)}")
+
+@app.route('/quarantine', methods=['POST'])
+def quarantine():
+    """Quarantine a malicious file"""
+    try:
+        data = request.get_json()
+        file_path = data.get('file_path')
+        threat_info = data.get('threat_info', {})
+        
+        if not file_path or not os.path.exists(file_path):
+            return jsonify({'success': False, 'message': 'File not found'})
+        
+        # Quarantine the file
+        result = quarantine_manager.quarantine_file(file_path, threat_info)
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        logging.error(f"Error quarantining file: {e}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/clean', methods=['POST'])
+def clean():
+    """Clean a malicious file"""
+    try:
+        data = request.get_json()
+        file_path = data.get('file_path')
+        file_type = data.get('file_type')
+        findings = data.get('findings', [])
+        keywords = data.get('keywords', [])
+        
+        if not file_path or not os.path.exists(file_path):
+            return jsonify({'success': False, 'message': 'File not found'})
+        
+        # Clean based on file type
+        if file_type == 'txt':
+            result = file_cleaner.clean_text_file(file_path, keywords)
+        elif file_type == 'pdf':
+            result = file_cleaner.clean_pdf_file(file_path, findings)
+        else:
+            return jsonify({'success': False, 'message': 'Cannot clean executable files. Please quarantine instead.'})
+        
+        # Delete original after cleaning
+        if result['success']:
+            try:
+                os.remove(file_path)
+            except:
+                pass
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        logging.error(f"Error cleaning file: {e}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/delete_file', methods=['POST'])
+def delete_file():
+    """Delete a file without quarantine"""
+    try:
+        data = request.get_json()
+        file_path = data.get('file_path')
+        
+        if not file_path or not os.path.exists(file_path):
+            return jsonify({'success': False, 'message': 'File not found'})
+        
+        os.remove(file_path)
+        logging.info(f"File deleted: {file_path}")
+        
+        return jsonify({'success': True, 'message': 'File deleted successfully'})
+    
+    except Exception as e:
+        logging.error(f"Error deleting file: {e}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/quarantine_manager')
+def quarantine_manager_page():
+    """Show quarantine management page"""
+    try:
+        quarantined_files = quarantine_manager.list_quarantined_files()
+        stats = quarantine_manager.get_quarantine_stats()
+        
+        return render_template('quarantine.html', 
+                             files=quarantined_files, 
+                             stats=stats)
+    
+    except Exception as e:
+        logging.error(f"Error loading quarantine page: {e}")
+        return render_template('quarantine.html', 
+                             files=[], 
+                             stats={},
+                             error=str(e))
+
+@app.route('/restore_quarantine', methods=['POST'])
+def restore_quarantine():
+    """Restore a quarantined file"""
+    try:
+        data = request.get_json()
+        quarantine_id = data.get('quarantine_id')
+        
+        result = quarantine_manager.restore_file(quarantine_id)
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        logging.error(f"Error restoring file: {e}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/delete_quarantine', methods=['POST'])
+def delete_quarantine():
+    """Permanently delete a quarantined file"""
+    try:
+        data = request.get_json()
+        quarantine_id = data.get('quarantine_id')
+        
+        result = quarantine_manager.delete_quarantined_file(quarantine_id)
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        logging.error(f"Error deleting quarantined file: {e}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/download_cleaned/<filename>')
+def download_cleaned(filename):
+    """Download a cleaned file"""
+    try:
+        file_path = os.path.join(file_cleaner.cleaned_dir, filename)
+        if os.path.exists(file_path):
+            return send_file(file_path, as_attachment=True)
+        else:
+            return "File not found", 404
+    except Exception as e:
+        logging.error(f"Error downloading cleaned file: {e}")
+        return str(e), 500
 
 if __name__ == '__main__':
     # Get environment settings with secure defaults
